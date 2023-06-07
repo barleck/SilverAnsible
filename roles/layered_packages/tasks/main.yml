@@ -1,0 +1,22 @@
+---
+# tasks file for layered_packages
+- name: Install desired applications as layered packages
+  community.general.rpm_ostree_pkg:
+    name: "{{ item }}"
+    state: absent
+    # apply_live: true  # This feature is not yet available
+  become: true
+  become_method: sudo
+  loop: "{{ layered_package_install }}"
+
+- name: Remove layered packages
+  community.general.rpm_ostree_pkg:
+    name: "{{ item }}"
+    state: absent
+    # apply_live: true  # This feature is not yet available
+  become: true
+  become_method: sudo
+  loop: "{{ layered_package_remove }}"
+
+- debug:
+    msg: "A reboot is required to complete installation / removal of these packages"

@@ -1,0 +1,23 @@
+---
+starship:
+  url: "https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-musl.tar.gz"
+  dir: "/usr/local/bin"
+  
+bashrc_dir: "{{ lookup('env', 'HOME') }}/.bashrc"
+
+nerdfont:
+  dir: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
+  url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/SourceCodePro.zip"
+  zip: "/tmp/FiraCode.zip"
+  name: "Source Code Pro"
+
+toolbox:
+  container_name: alpine-toolbox
+  containerfile_path: "{{ role_path }}/files/Containerfile"
+  profile_name: "toolbox"
+  image_tag: "latest"
+  command: "$(command -v toolbox) enter alpine-toolbox"
+
+os:
+  profile_name: "os"
+  command: ""

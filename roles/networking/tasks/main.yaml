@@ -1,0 +1,14 @@
+---
+- name: Create backup of original resolved.conf file
+  ansible.builtin.copy:
+    src: "/etc/systemd/resolved.conf"
+    dest: "/etc/systemd/resolved.conf.orig"
+  become: true
+
+- name: Configure systemd-resolved
+  template:
+    src: "systemd-resolved.conf.j2"
+    dest: "/etc/systemd/resolved.conf"
+  become: true
+  notify:
+    - restart systemd-resolved

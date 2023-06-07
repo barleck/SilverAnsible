@@ -1,0 +1,27 @@
+---
+# defaults file for flatpak
+fedora_flatpak_repositories:
+    - "fedora"
+    - "fedora-testing"
+
+flatpak_package_names:
+    - "com.github.marhkb.Pods"
+    - "com.github.tchx84.Flatseal"
+    - "com.github.wwmm.easyeffects"
+    - "com.gitlab.newsflash"
+    - "com.logseq.Logseq"
+    - "com.mattjakeman.ExtensionManager"
+    - "com.synology.SynologyDrive"
+    - "com.usebottles.bottles"
+    - "com.vscodium.codium"
+    - "com.yubico.yubioath"
+    - "fr.romainvigier.MetadataCleaner"
+    - "io.github.janbar.noson"
+    - "org.signal.Signal"
+    - "org.libreoffice.LibreOffice"
+    - "io.github.shiftey.Desktop"
+    - "com.bitwarden.desktop"
+    - "net.mullvad.MullvadBrowser"
+
+autostart_dir: "{{ lookup('env', 'HOME') }}/.config/autostart/"
+easyeffect_dir: "{{ lookup('env', 'HOME') }}/.var/app/com.github.wwmm.easyeffects/config/easyeffects/"

@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=com.synology.SynologyDrive
+Exec=flatpak run --command=synology-drive com.synology.SynologyDrive --gapplication-service
+X-Flatpak=com.synology.SynologyDrive

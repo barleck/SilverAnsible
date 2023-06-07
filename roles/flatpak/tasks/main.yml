@@ -1,0 +1,94 @@
+---
+# tasks/main.yml file for Flatpak
+
+- name: Replace Fedora remote with Flathub remote for each Flatpak
+  block:
+    - name: List all installed Flatpaks
+      ansible.builtin.shell: flatpak list --app --runtime --columns=application,origin
+      register: flatpak_list
+
+    - name: Removing Fedora remote versions of Flatpaks
+      community.general.flatpak:
+        name: "{{ item.split('\t')[0] }}"
+        state: absent
+      loop: "{{ flatpak_list.stdout_lines[1:] }}"
+      when: item.split('\t')[1] == 'fedora'
+
+    - name: Installing flathub versions of Flatpaks
+      community.general.flatpak:
+        name: "{{ item.split('\t')[0] }}"
+        remote: flathub
+        state: present
+      loop: "{{ flatpak_list.stdout_lines[1:] }}"
+      when: item.split('\t')[1] == 'fedora'
+
+    - name: "Remove Fedora Flatpak Repositories"
+      community.general.flatpak_remote:
+        name: "{{ fedora_flatpak_repositories }}"
+        state: "absent"
+      when: ansible_distribution == 'Fedora'
+      become: true
+
+  when: ansible_distribution == 'Fedora'
+
+- name: "Installing Additional Flatpak Packages"
+  community.general.flatpak:
+    name: "{{ flatpak_package_names }}"
+    state: "{{ flatpak_package_names }}"
+
+- name: Start Podman socket
+  ansible.builtin.systemd:
+    name: podman.socket
+    state: started
+    scope: user
+    enabled: true
+    daemon_reload: yes
+
+- name: Flatpak autostart
+  block:
+    - name: Create Autostart directory
+      ansible.builtin.file:
+        path: "{{ autostart_dir }}"
+        state: directory
+        mode: "0755"
+        recursive: true
+
+    - name: Copy EasyEffects Autostart file
+      ansible.builtin.copy:
+        src: "files/com.github.wwmm.easyeffects.desktop"
+        dest: "{{ autostart_dir }}"
+
+    - name: Copy SynologyDrive Autostart file
+      ansible.builtin.copy:
+        src: "files/com.synology.SynologyDrive.desktop"
+        dest: "{{ autostart_dir }}"
+
+- name: EasyEffects Config
+  block:
+    - name: Create EasyEffects Config directory
+      ansible.builtin.file:
+        path: "{{ easyeffect_dir }}"
+        state: directory
+        mode: "0755"
+        recursive: true
+
+    - name: Copy EasyEffects Output Config directory
+      ansible.builtin.copy:
+        src: "files/output"
+        dest: "{{ easyeffect_dir }}"
+
+- name: Flatpak update service
+  block:
+    - name: Copy timer and service files
+      ansible.builtin.copy:
+        src: files/flatpak-automatic.*
+        dest: "~/.config/systemd/user/"
+      notify:
+        - Reload systemd
+
+    - name: Enable timer and service
+      ansible.builtin.systemd:
+        name: flatpak-automatic.timer
+        state: started
+        scope: user
+        enabled: true

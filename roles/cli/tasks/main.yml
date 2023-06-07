@@ -1,0 +1,94 @@
+---
+- name: Download Starship.rs
+  block:  
+    - name: Download and extract Starship binary 
+      ansible.builtin.unarchive:
+        src: "{{ starship_url }}"
+        dest: "{{ starship_dir }}"
+        remote_src: yes
+      become: true
+
+    - name: Configure Starship.rs for current user
+      ansible.builtin.lineinfile:
+        path: "{{ bashrc_dir }}"
+        line: 'eval "$(starship init bash)"'
+        state: present
+        create: true
+
+- name: Download Nerdfonts
+  block:
+    - name: Create font directory
+      ansible.builtin.file:
+        path: "{{ nerdfont.dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Extract font archive
+      ansible.builtin.unarchive:
+        src: "{{ nerdfont.url }}"
+        dest: "{{ nerdfont.dir }}"
+        remote_src: yes
+
+    - name: Refresh font cache
+      ansible.builtin.command: fc-cache -f -v "{{ nerdfont.dir }}"
+  become: false
+
+- name: Terminal config
+  block: 
+    - name: Create UUID for Default GNOME Terminal profile
+      ansible.builtin.command: cat /proc/sys/kernel/random/uuid
+      register: os_uuid
+
+    - name: Create UUID for Toolbox GNOME Terminal profile
+      ansible.builtin.command: cat /proc/sys/kernel/random/uuid
+      register: toolbox_uuid
+
+    - name: Create new GNOME Terminal profile
+      ansible.builtin.command: dconf dump /org/gnome/terminal/legacy/profiles:/
+      register: dconf_dump
+
+    - name: Build Podman image from Containerfile
+      podman_image:
+        name: "{{ container_name }}"
+        source: build
+        build: "{{ containerfile_path }}"
+        tag: "{{ container_name }}:{{ image_tag }}"
+
+    - name: Create Alpine toolbox
+      ansible.builtin.command: toolbox create -i localhost/alpine-toolbox:latest -c alpine-toolbox
+
+    - name: Create temporary file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: temp
+      register: tempfile
+
+    - name: Copy current config to temporary file
+      ansible.builtin.copy:
+        content: "{{ dconf_dump.stdout }}"
+        dest: "{{ tempfile.path }}"
+
+    - name: Set default Terminal profile
+      ansible.builtin.lineinfile:
+        path: "{{ tempfile.path }}"
+        insertafter: '^#.*'
+        line: "default='{{ toolbox_uuid.stdout }}'"
+
+    - name: Add UUID to list
+      ansible.builtin.replace:
+        path: "{{ tempfile.path }}"
+        regexp: "(list=\\[)([^\\]]*)"
+        replace: "\\g<1>'{{ item.stdout }}',\\g<2>"
+      loop:
+        - os_uuid
+        - toolbox_uuid
+
+    - name: Copy Terminal profiles template to temporary file
+      ansible.builtin.blockinfile:
+        dest: "{{ tempfile.path }}"
+        block: "{{ lookup('template', 'terminal_profiles.j2') }}"
+
+    - name: Write back changes to config using dconf load
+      ansible.builtin.shell: dconf load /org/gnome/terminal/legacy/profiles:/ < {{ tempfile.path }}
+      register: dconf_load
+  become: false

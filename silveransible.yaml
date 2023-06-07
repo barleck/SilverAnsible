@@ -1,0 +1,11 @@
+---
+- name: Fedora SilverBlue Post Installation
+  hosts: localhost
+  connection: local
+
+  roles:
+    # - {role: 'ostree_updates', tags: 'ostree_updates'}
+    # - {role: 'layered_packages', tags: 'ostree'}
+    # - {role: 'flatpak', tags: 'flatpak'}
+    # - {role: 'networking', tags: 'networking'}
+    - {role: 'cli', tags: 'terminal'}

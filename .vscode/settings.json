@@ -1,0 +1,6 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///var/home/erwin/Documents/SilverAnsible/roles/flatpak/tasks/main.yml"
+    },
+    "ansible.python.interpreterPath": "/var/home/erwin/Documents/SilverAnsible/ansible-venv/bin/python"
+}

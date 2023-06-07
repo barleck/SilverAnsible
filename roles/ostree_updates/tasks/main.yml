@@ -1,0 +1,17 @@
+---
+# tasks file for os_updates
+- name: Configure update settings
+  ansible.builtin.template:
+    src: templates/rpm-ostreed.conf.j2
+    dest: /etc/rpm-ostreed.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Start rpm-ostreed service, if not started
+  ansible.builtin.service:
+    name: rpm-ostreed-automatic.timer
+    state: started
+    enabled: yes
+  become: true
